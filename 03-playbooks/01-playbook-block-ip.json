@@ -1,1 +1,105 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "Microsoft_Sentinel_incident": {
+        "type": "ApiConnectionWebhook",
+        "inputs": {
+          "body": {
+            "callback_url": "@{listCallbackUrl()}"
+          },
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+            }
+          },
+          "path": "/incident-creation"
+        }
+      }
+    },
+    "actions": {
+      "Get_incident_details": {
+        "runAfter": {},
+        "type": "ApiConnection",
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/Incidents/subscriptions/@{encodeURIComponent(triggerBody()?['workspaceInfo']?['SubscriptionId'])}/resourceGroups/@{encodeURIComponent(triggerBody()?['workspaceInfo']?['ResourceGroupName'])}/workspaces/@{encodeURIComponent(triggerBody()?['workspaceInfo']?['WorkspaceName'])}/incidents/@{encodeURIComponent(triggerBody()?['object']?['properties']?['incidentNumber'])}"
+        }
+      },
+      "Extract_malicious_IP": {
+        "runAfter": {
+          "Get_incident_details": ["Succeeded"]
+        },
+        "type": "ParseJson",
+        "inputs": {
+          "content": "@triggerBody()?['object']?['properties']?['relatedEntities']",
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {"type": "string"},
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "address": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Add_comment_to_incident": {
+        "runAfter": {
+          "Extract_malicious_IP": ["Succeeded"]
+        },
+        "type": "ApiConnection",
+        "inputs": {
+          "body": {
+            "message": "🤖 AUTOMATED RESPONSE INITIATED\n\nPlaybook: Auto-Block-IP\nAction: IP address flagged for blocking\nTriggered by: Brute Force Detection Rule\nTime: @{utcNow()}\nStatus: Investigation in progress"
+          },
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+            }
+          },
+          "method": "post",
+          "path": "/Incidents/subscriptions/@{encodeURIComponent(triggerBody()?['workspaceInfo']?['SubscriptionId'])}/resourceGroups/@{encodeURIComponent(triggerBody()?['workspaceInfo']?['ResourceGroupName'])}/workspaces/@{encodeURIComponent(triggerBody()?['workspaceInfo']?['WorkspaceName'])}/incidents/@{encodeURIComponent(triggerBody()?['object']?['properties']?['incidentNumber'])}/comments"
+        }
+      },
+      "Update_incident_severity": {
+        "runAfter": {
+          "Add_comment_to_incident": ["Succeeded"]
+        },
+        "type": "ApiConnection",
+        "inputs": {
+          "body": {
+            "severity": "High",
+            "status": "Active"
+          },
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+            }
+          },
+          "method": "put",
+          "path": "/Incidents/subscriptions/@{encodeURIComponent(triggerBody()?['workspaceInfo']?['SubscriptionId'])}/resourceGroups/@{encodeURIComponent(triggerBody()?['workspaceInfo']?['ResourceGroupName'])}/workspaces/@{encodeURIComponent(triggerBody()?['workspaceInfo']?['WorkspaceName'])}/incidents/@{encodeURIComponent(triggerBody()?['object']?['properties']?['incidentNumber'])}"
+        }
+      }
+    }
+  }
+}
 
