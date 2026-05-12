@@ -38,6 +38,8 @@ in under 30 seconds — 24/7 without human intervention.
 - Coverage: 24/7 Automated
 - Human Error: Minimized
 
+## Architecture
+
 ##  Deployment
 ```powershell
 # Enable Sentinel
