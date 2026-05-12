@@ -1,0 +1,6 @@
+IPAddress,ThreatType,Confidence,Source,DateAdded,Notes
+185.220.101.1,TorExitNode,High,ThreatIntel,4/24/2026,Known Tor exit node
+45.142.212.100,BruteForce,High,Internal,4/24/2026,Brute force source
+91.108.4.1,C2Server,Critical,OSINT,4/24/2026,Known C2 server
+194.165.16.1,Scanner,Medium,ThreatIntel,4/24/2026,Port scanner
+103.251.167.1,Malware,High,ThreatIntel,4/24/2026,Malware distribution
