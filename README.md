@@ -10,6 +10,9 @@ in under 30 seconds — 24/7 without human intervention.
 *Platform:* Microsoft Sentinel + Logic Apps
 *Region:* UK South
 
+## Architecture
+![Architecture](docs/architecture-diagram.png)
+
 ##  Threats Detected & Auto-Responded
 | Threat | Detection | Auto Response |
 |--------|-----------|--------------|
@@ -37,8 +40,6 @@ in under 30 seconds — 24/7 without human intervention.
 - Response Time: < 30 seconds
 - Coverage: 24/7 Automated
 - Human Error: Minimized
-
-## Architecture
 
 ##  Deployment
 ```powershell
